@@ -3,6 +3,7 @@
     "source.fixAll": "explicit"
   },
   "eslint.validate": ["typescript", "typescriptreact", "html"],
+  "eslint.experimental.useFlatConfig": true,
   "editor.formatOnSave": true,
   "editor.formatOnPaste": true,
   "editor.defaultFormatter": "esbenp.prettier-vscode",

@@ -4,7 +4,6 @@ export function ComboRange({
   step,
   value,
   onChange,
-  formatValue,
 }: {
   min: number;
   max: number;

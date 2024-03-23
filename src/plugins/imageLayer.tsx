@@ -77,7 +77,7 @@ export const imageLayerPlugin: LayerPlugin<
     ctx.drawImage(image, x, y, image.width * scale, image.height * scale);
   },
 
-  UIPanel({options, setOptions, ctx, computed}) {
+  UIPanel({options, setOptions, computed}) {
     const [loading, setLoading] = useState(false);
 
     const uploadFile = async () => {
@@ -128,7 +128,6 @@ export const imageLayerPlugin: LayerPlugin<
         <RemoveBgSection
           options={options}
           setOptions={setOptions}
-          ctx={ctx}
           computed={computed}
         />
         {loading && <LoadingOverlay />}

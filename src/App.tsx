@@ -1,4 +1,4 @@
-import ReacjinEditor from './ReacjinEditor';
+import ReacjinEditor from '@/src/ReacjinEditor';
 
 export default function App() {
   return (

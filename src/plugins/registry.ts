@@ -11,15 +11,14 @@ const layerPluginRegistry = {
 
 export type PluginID = keyof typeof layerPluginRegistry;
 
-export type PluginOptions<P> = P extends LayerPlugin<infer Options, any>
-  ? Options
-  : never;
+export type PluginOptions<P> =
+  P extends LayerPlugin<infer Options, any> ? Options : never;
 
 export type PluginByID<ID> = ID extends PluginID
   ? (typeof layerPluginRegistry)[ID]
   : ID extends unknown
-  ? LayerPlugin<unknown>
-  : never;
+    ? LayerPlugin<unknown>
+    : never;
 
 export function pluginByID<ID extends string>(id: ID): PluginByID<ID> {
   for (const [pluginID, plugin] of Object.entries(layerPluginRegistry)) {

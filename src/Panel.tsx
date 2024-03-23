@@ -2,9 +2,9 @@
 
 import clsx from 'clsx';
 import {useDragControls} from 'framer-motion';
+import {motion} from 'framer-motion';
 
 import {usePanel} from '@/src/PanelContext';
-import {motion} from 'framer-motion';
 
 export function Panel({
   children,

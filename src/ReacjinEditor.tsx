@@ -1,6 +1,7 @@
 'use client';
 
 import {AnimatePresence} from 'framer-motion';
+import {motion} from 'framer-motion';
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {
   MdAddPhotoAlternate,
@@ -32,12 +33,11 @@ import {PanelProvider} from '@/src/PanelContext';
 import {pluginByID} from '@/src/plugins/registry';
 import {Toolbar} from '@/src/Toolbar';
 import {useUndoable} from '@/src/useUndoable';
-import {motion} from 'framer-motion';
 
 export default function ReacjinEditor() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const editorAreaRef = useRef<HTMLDivElement>(null);
-  const [imageSize, setImageSize] = useState([256, 256]);
+  const [imageSize] = useState([256, 256]);
   const [zoom, setZoom] = useState(1);
   const {
     state: layers,
@@ -96,7 +96,7 @@ export default function ReacjinEditor() {
     setDropping(true);
   }, []);
 
-  const handleDragLeave = useCallback((event: React.DragEvent) => {
+  const handleDragLeave = useCallback(() => {
     setDropping(false);
   }, []);
 
@@ -287,7 +287,7 @@ export default function ReacjinEditor() {
                   >
                     <div className="flex flex-col gap-2 p-2">
                       <SelectedLayerUIPanel
-                        ctx={canvasRef.current?.getContext('2d')!}
+                        ctx={canvasRef.current?.getContext('2d')}
                         options={selectedLayer!.options}
                         setOptions={(options) =>
                           handleSetOptions(selectedLayer!, options)

@@ -40,7 +40,7 @@ const getStyle = (options: TextLayerOptions) =>
     align: options.textAlign,
     baseline: 'middle',
     lineHeight: options.lineHeight,
-  } satisfies StyledTextStyle);
+  }) satisfies StyledTextStyle;
 
 function getBestFitFontSize(
   ctx: CanvasRenderingContext2D,

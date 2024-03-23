@@ -10,12 +10,10 @@ import {loadModel, removeBackground} from '@/src/removeBackground';
 import {Section} from '@/src/Section';
 
 export function RemoveBgSection({
-  ctx,
   options,
   setOptions,
   computed,
 }: {
-  ctx: CanvasRenderingContext2D;
   options: ImageLayerOptions;
   setOptions: (options: ImageLayerOptions) => void;
   computed: ImageLayerComputed;
