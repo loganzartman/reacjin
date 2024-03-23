@@ -4,7 +4,7 @@ import type {Config} from 'tailwindcss';
 
 const config = {
   plugins: [daisyUI],
-  content: ['./src/*.{html,tsx,jsx}'],
+  content: ['./src/**/*.{html,tsx,jsx}'],
   theme: {
     extend: {
       colors: {
