@@ -1,4 +1,4 @@
-import * as ort from 'onnxruntime-web';
+import {env as ortEnv, InferenceSession, Tensor} from 'onnxruntime-web';
 import ortWasmPath from 'onnxruntime-web-dist/ort-wasm.wasm';
 import ortWasmSimdPath from 'onnxruntime-web-dist/ort-wasm-simd.wasm';
 
@@ -9,7 +9,7 @@ type FetchModelArgs = {
   abortSignal?: AbortSignal;
 };
 
-let onnxSession: ort.InferenceSession | null = null;
+let onnxSession: InferenceSession | null = null;
 
 async function fetchModelData({onProgress, abortSignal}: FetchModelArgs) {
   const response = await fetch(modelPath, {signal: abortSignal});
@@ -41,18 +41,18 @@ async function fetchModelData({onProgress, abortSignal}: FetchModelArgs) {
 
 export async function loadModel(
   args: FetchModelArgs = {},
-): Promise<ort.InferenceSession> {
+): Promise<InferenceSession> {
   if (onnxSession) return onnxSession;
   console.log('Fetching model');
   const modelData = await fetchModelData(args);
   console.log('Loading model');
   const basepath = document.location.href;
-  ort.env.wasm.wasmPaths = {
+  ortEnv.wasm.wasmPaths = {
     'ort-wasm.wasm': new URL(ortWasmPath, basepath).toString(),
     'ort-wasm-simd.wasm': new URL(ortWasmSimdPath, basepath).toString(),
   };
-  ort.env.wasm.proxy = true;
-  onnxSession = await ort.InferenceSession.create(modelData);
+  ortEnv.wasm.proxy = true;
+  onnxSession = await InferenceSession.create(modelData);
   console.log('Model loaded');
   return onnxSession;
 }
@@ -110,10 +110,10 @@ export async function removeBackground(
     }
   }
 
-  const inputTensor = new ort.Tensor('float32', data, [1, 3, 320, 320]);
+  const inputTensor = new Tensor('float32', data, [1, 3, 320, 320]);
 
   // run inference!
-  const feeds: ort.InferenceSession.FeedsType = {
+  const feeds: InferenceSession.FeedsType = {
     [session.inputNames[0]]: inputTensor,
   };
   const inferenceResult = await session.run(feeds);
