@@ -17,5 +17,6 @@ src/models filter=lfs diff=lfs merge=lfs -text
 *.onnx filter=lfs diff=lfs merge=lfs -text
 *.css filter=lfs diff=lfs merge=lfs -text
 *.parcelrc filter=lfs diff=lfs merge=lfs -text
+*.postcssrc filter=lfs diff=lfs merge=lfs -text
 * !text !filter !merge !diff
 static/models/* filter=lfs diff=lfs merge=lfs -text
