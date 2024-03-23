@@ -1,6 +1,6 @@
 {
   "name": "reacti",
-  "packageManager": "yarn@4.1.1",
+  "packageManager": "pnpm@8.15.5",
   "browserslist": "> 0.5%, last 2 versions, not dead",
   "source": "src/index.html",
   "scripts": {
@@ -8,7 +8,13 @@
     "build": "parcel build"
   },
   "devDependencies": {
-    "@parcel/core": "^2.12.0",
-    "parcel": "^2.12.0"
+    "@types/react": "^18.2.69",
+    "@types/react-dom": "^18.2.22",
+    "parcel": "^2.12.0",
+    "process": "^0.11.10"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   }
 }
