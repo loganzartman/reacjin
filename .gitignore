@@ -11,3 +11,7 @@
 
 #!.yarn/cache
 .pnp.*
+
+# parcel assets
+.parcel-cache
+dist
