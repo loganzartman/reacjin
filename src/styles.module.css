@@ -1,0 +1,7 @@
+.checkerBackground {
+  background: repeating-conic-gradient(
+      rgba(255, 255, 255, 0.2) 0% 25%,
+      rgba(0, 0, 0, 0.2) 0% 50%
+    )
+    50% / 16px 16px;
+}

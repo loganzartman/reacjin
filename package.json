@@ -7,14 +7,29 @@
     "start": "parcel",
     "build": "parcel build"
   },
+  "browser": {
+    "//": "this should be a tempfix. see: https://github.com/microsoft/onnxruntime/pull/20021",
+    "onnxruntime-web": "./node_modules/onnxruntime-web/dist/ort.min.js"
+  },
   "devDependencies": {
+    "@parcel/config-default": "^2.12.0",
+    "@parcel/transformer-raw": "^2.12.0",
     "@types/react": "^18.2.69",
     "@types/react-dom": "^18.2.22",
+    "buffer": "^5.5.0||^6.0.0",
     "parcel": "^2.12.0",
     "process": "^0.11.10"
   },
   "dependencies": {
+    "@headlessui/react": "^1.7.18",
+    "canvas-styled-text": "^3.0.3",
+    "clsx": "^2.1.0",
+    "framer-motion": "^11.0.20",
+    "onnxruntime-web": "^1.17.1",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "react-icons": "^5.0.1",
+    "usehooks-ts": "^3.0.2",
+    "uuid": "^9.0.1"
   }
 }

@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "esModuleInterop": true,
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "isolatedModules": true,
+    "paths": {
+      "@/src/*": ["./src/*"],
+      "@/static/*": ["./static/*"],
+      "onnxruntime-web-dist/*": ["./node_modules/onnxruntime-web/dist/*"]
+    }
+  }
+}
