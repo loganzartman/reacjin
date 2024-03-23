@@ -12,8 +12,8 @@
     "types": "tsc --noEmit"
   },
   "browser": {
-    "//": "this should be a tempfix. see: https://github.com/microsoft/onnxruntime/pull/20021",
-    "onnxruntime-web": "./node_modules/onnxruntime-web/dist/ort.min.js"
+    "//": "this should be a tempfix, I hope. see: https://github.com/microsoft/onnxruntime/pull/20021",
+    "onnxruntime-web": "./node_modules/onnxruntime-web/dist/esm/ort.min.js"
   },
   "devDependencies": {
     "@parcel/config-default": "^2.12.0",
