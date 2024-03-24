@@ -94,13 +94,7 @@ export const textLayerPlugin: LayerPlugin<TextLayerOptions> = {
   draw: ({ctx, options}) => {
     const baseStyle = getStyle(options);
     ctx.lineJoin = 'round';
-    drawStyledText(
-      ctx,
-      options.text,
-      ctx.canvas.width / 2,
-      ctx.canvas.height / 2,
-      baseStyle,
-    );
+    drawStyledText(ctx, options.text, 0, 0, baseStyle);
   },
 
   UIPanel: ({ctx, options, setOptions}) => {

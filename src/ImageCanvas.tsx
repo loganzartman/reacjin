@@ -4,6 +4,7 @@ import {useEffect, useImperativeHandle, useState} from 'react';
 import React from 'react';
 
 import {ComputedCache} from '@/src/ComputedCache';
+import {withEffects} from '@/src/effects/registry';
 import {Layers} from '@/src/layer';
 import {LoadingOverlay} from '@/src/LoadingOverlay';
 import {pluginByID} from '@/src/plugins/registry';
@@ -45,7 +46,13 @@ export const ImageCanvas = React.forwardRef(
         const plugin = pluginByID(layer.pluginID);
         const {options} = layer;
         const {computed} = computedCache.get(layer.pluginID, options) ?? {};
-        plugin.draw({ctx, options, computed});
+        withEffects({
+          effectsConfig: layer.effectsConfig,
+          ctx,
+          drawCallback: () => {
+            plugin.draw({ctx, options, computed});
+          },
+        });
       }
       ctx.restore();
 

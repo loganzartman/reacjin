@@ -22,11 +22,11 @@ import {ImageCanvas} from '@/src/ImageCanvas';
 import {
   createFillLayer,
   createImageLayer,
-  createLayer,
   createTextLayer,
   Layer,
   Layers,
 } from '@/src/layer';
+import LayerEffectsUI from '@/src/LayerEffectsUI';
 import {LayerPanel} from '@/src/LayerPanel';
 import {Panel} from '@/src/Panel';
 import {PanelProvider} from '@/src/PanelContext';
@@ -46,19 +46,22 @@ export default function ReacjinEditor() {
     redo,
   } = useUndoable(
     useLocalStorage<Layers>('reacjin.project.layers', () => [
-      createLayer('text', {
-        text: 'Hello, world!',
-        autoFitText: false,
-        fontSize: 32,
-        fontName: 'sans-serif',
-        fontWeight: 700,
-        fillStyle: 'white',
-        strokeStyle: 'black',
-        strokeWidth: 2,
-        textAlign: 'center',
-        lineHeight: 1.1,
-      }),
-      createLayer('image', {src: 'https://picsum.photos/256'}),
+      createTextLayer(
+        {
+          text: 'Hello, world!',
+          autoFitText: false,
+          fontSize: 32,
+          fontName: 'sans-serif',
+          fontWeight: 700,
+          fillStyle: 'white',
+          strokeStyle: 'black',
+          strokeWidth: 2,
+          textAlign: 'center',
+          lineHeight: 1.1,
+        },
+        {transform: {rotate: 0.5}},
+      ),
+      createImageLayer({src: 'https://picsum.photos/256'}),
     ]),
   );
   const [selectedLayerID, setSelectedLayerID] = useState<string | null>(null);
@@ -207,6 +210,8 @@ export default function ReacjinEditor() {
     ? computedCache.get(selectedLayer.pluginID, selectedLayer.options)?.computed
     : null;
 
+  const ctx = canvasRef.current?.getContext('2d');
+
   return (
     <PanelProvider>
       <div
@@ -270,7 +275,7 @@ export default function ReacjinEditor() {
             </div>
             <div className="absolute right-0 top-0">
               <AnimatePresence>
-                {SelectedLayerUIPanel && (
+                {SelectedLayerUIPanel && ctx && (
                   <Panel
                     key={selectedLayerID}
                     title={`Layer settings: ${selectedLayer?.pluginID}`}
@@ -287,7 +292,7 @@ export default function ReacjinEditor() {
                   >
                     <div className="flex flex-col gap-2 p-2">
                       <SelectedLayerUIPanel
-                        ctx={canvasRef.current?.getContext('2d')}
+                        ctx={ctx}
                         options={selectedLayer!.options}
                         setOptions={(options) =>
                           handleSetOptions(selectedLayer!, options)
@@ -295,6 +300,21 @@ export default function ReacjinEditor() {
                         computed={computed}
                       />
                     </div>
+                  </Panel>
+                )}
+              </AnimatePresence>
+            </div>
+            <div className="absolute left-0 bottom-0">
+              <AnimatePresence>
+                {selectedLayer && ctx && (
+                  <Panel title="Layer effects" dragConstraints={editorAreaRef}>
+                    <LayerEffectsUI
+                      key={selectedLayerID}
+                      layer={selectedLayer}
+                      ctx={ctx}
+                      layers={layers}
+                      setLayers={setLayers}
+                    />
                   </Panel>
                 )}
               </AnimatePresence>
