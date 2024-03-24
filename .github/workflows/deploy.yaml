@@ -34,10 +34,11 @@ jobs:
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
-      - run: pnpm install
-      - run: pnpm lint
-      - run: pnpm types
-      - run: pnpm build
+      - run: |
+          pnpm install
+          pnpm lint
+          pnpm types
+          pnpm build
       - uses: actions/upload-artifact@v4
         with:
           name: dist-artifacts
@@ -52,7 +53,6 @@ jobs:
         with:
           name: dist-artifacts
           path: dist
-      - uses: actions/configure-pages@v4
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
