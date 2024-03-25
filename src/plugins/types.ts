@@ -14,6 +14,12 @@ export interface LayerPlugin<Options, Computed = unknown> {
     computed: Computed;
   }): void;
 
+  bbox?(params: {
+    ctx: CanvasRenderingContext2D;
+    options: Options;
+    computed: Computed;
+  }): [number, number, number, number] | null;
+
   UIPanel?: React.FC<{
     ctx: CanvasRenderingContext2D;
     options: Options;

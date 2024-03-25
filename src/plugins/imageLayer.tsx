@@ -67,17 +67,22 @@ export const imageLayerPlugin: LayerPlugin<
   },
 
   draw: ({ctx, computed: {image}}) => {
-    // fit the image
-    const maxSize = Math.max(image.width, image.height);
-    const minSpace = Math.min(ctx.canvas.width, ctx.canvas.height);
-    const scale = minSpace / maxSize;
     ctx.drawImage(
       image,
       -image.width / 2,
       -image.height / 2,
-      image.width * scale,
-      image.height * scale,
+      image.width,
+      image.height,
     );
+  },
+
+  bbox({computed: {image}}) {
+    return [
+      -image.width / 2,
+      -image.height / 2,
+      image.width / 2,
+      image.height / 2,
+    ];
   },
 
   UIPanel({options, setOptions, computed}) {

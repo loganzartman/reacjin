@@ -97,6 +97,17 @@ export const textLayerPlugin: LayerPlugin<TextLayerOptions> = {
     drawStyledText(ctx, options.text, 0, 0, baseStyle);
   },
 
+  bbox({ctx, options}) {
+    const style = getStyle(options);
+    const metrics = measureStyledText(ctx, options.text, style);
+    return [
+      -metrics.actualBoundingBoxLeft,
+      -metrics.actualBoundingBoxAscent,
+      metrics.actualBoundingBoxRight,
+      metrics.actualBoundingBoxDescent,
+    ];
+  },
+
   UIPanel: ({ctx, options, setOptions}) => {
     if (options.autoFitText) {
       const fontSize = Math.round(

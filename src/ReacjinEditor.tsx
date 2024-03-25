@@ -255,6 +255,7 @@ export default function ReacjinEditor() {
                 height={imageSize[1]}
                 zoom={zoom}
                 layers={layers}
+                selectedLayerID={selectedLayerID}
                 computing={computing}
                 computedCache={computedCache}
               />
