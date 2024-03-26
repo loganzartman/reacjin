@@ -32,6 +32,7 @@ import {Panel} from '@/src/Panel';
 import {PanelProvider} from '@/src/PanelContext';
 import {pluginByID} from '@/src/plugins/registry';
 import {Toolbar} from '@/src/Toolbar';
+import {usePointerControls} from '@/src/usePointerControls';
 import {useUndoable} from '@/src/useUndoable';
 
 export default function ReacjinEditor() {
@@ -199,6 +200,8 @@ export default function ReacjinEditor() {
     ? pluginByID(selectedLayer.pluginID)
     : null;
   const SelectedLayerUIPanel = selectedLayerPlugin?.UIPanel;
+
+  usePointerControls({workspaceRef: editorAreaRef, selectedLayer, setLayers});
 
   if (!computing && computedCache.anyOutdated(layers)) {
     setComputing(true);
