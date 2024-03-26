@@ -17,6 +17,7 @@ function isStateUpdater<T>(
 
 export function useUndoable<T>(
   stateTuple: [T, React.Dispatch<React.SetStateAction<T>>],
+  {maxHistory = 50}: {maxHistory?: number} = {},
 ): Undoable<T> {
   const [state, _setState] = stateTuple;
   const [undoStack, setUndoStack] = useState<T[]>([]);
@@ -34,11 +35,11 @@ export function useUndoable<T>(
   const setState: React.Dispatch<React.SetStateAction<T>> = useCallback(
     (action) => {
       const state = stateRef.current;
-      setUndoStack((undoStack) => [...undoStack, state]);
+      setUndoStack((undoStack) => [...undoStack, state].slice(-maxHistory));
       setRedoStack([]);
       _setState((state) => (isStateUpdater(action) ? action(state) : action));
     },
-    [_setState],
+    [_setState, maxHistory],
   );
 
   const undo = useCallback(() => {
