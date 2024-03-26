@@ -22,6 +22,7 @@ export const ImageCanvas = React.forwardRef(
       selectedLayerID,
       computing,
       computedCache,
+      accurate,
     }: {
       width: number;
       height: number;
@@ -30,12 +31,14 @@ export const ImageCanvas = React.forwardRef(
       selectedLayerID: string | null;
       computing: boolean;
       computedCache: ComputedCache;
+      accurate: boolean;
     },
     ref,
   ) => {
     const canvasRef = React.useRef<HTMLCanvasElement>(null);
     const overlayCanvasRef = React.useRef<HTMLCanvasElement>(null);
-    const displayRef = React.useRef<HTMLImageElement>(null);
+    const imgRef = React.useRef<HTMLImageElement>(null);
+    const displayRef = accurate ? imgRef : canvasRef;
     const [dataURL, setDataURL] = useState<string>('');
 
     const overlayWidth = overlayCanvasRef.current?.offsetWidth ?? 256;
@@ -90,8 +93,16 @@ export const ImageCanvas = React.forwardRef(
       }
       ctx.restore();
 
-      setDataURL(canvasRef.current.toDataURL());
-    }, [computing, computedCache, layers, selectedLayerID, zoom]);
+      if (accurate) setDataURL(canvasRef.current.toDataURL());
+    }, [
+      computing,
+      computedCache,
+      layers,
+      selectedLayerID,
+      zoom,
+      accurate,
+      displayRef,
+    ]);
 
     const sizeStyle = {
       width: `${(width * zoom).toFixed(0)}px`,
@@ -109,18 +120,25 @@ export const ImageCanvas = React.forwardRef(
                 ref={canvasRef}
                 width={width}
                 height={height}
-                className="hidden"
-              ></canvas>
-              <img
-                ref={displayRef}
-                src={dataURL}
+                style={sizeStyle}
                 className={clsx(
+                  accurate && 'hidden',
                   'absolute top-0 left-0',
                   styles.checkerBackground,
                 )}
-                style={sizeStyle}
-                alt="Output image"
-              />
+              ></canvas>
+              {accurate && (
+                <img
+                  ref={imgRef}
+                  src={dataURL}
+                  className={clsx(
+                    'absolute top-0 left-0',
+                    styles.checkerBackground,
+                  )}
+                  style={sizeStyle}
+                  alt="Output image"
+                />
+              )}
               {computing && <LoadingOverlay />}
             </div>
           </div>

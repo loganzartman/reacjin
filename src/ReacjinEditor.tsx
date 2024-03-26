@@ -259,6 +259,7 @@ export default function ReacjinEditor() {
             selectedLayerID={selectedLayerID}
             computing={computing}
             computedCache={computedCache}
+            accurate={false}
           />
           <div
             ref={editorAreaRef}
