@@ -61,7 +61,10 @@ export function ExportDialog({
   const [exportFilename, setExportFilename] = useState(filename);
   const [quality, setQuality] = useState(1);
   const [exportType, setExportType] = useState(exportTypes[0]);
-  const dataURL = generateDataURL(canvas, exportType, quality);
+  const dataURL = useMemo(
+    () => isOpen && generateDataURL(canvas, exportType, quality),
+    [canvas, exportType, isOpen, quality],
+  );
 
   const supportedExportTypes = useMemo(
     () => getSupportedExportTypes(exportTypes),
@@ -126,7 +129,7 @@ export function ExportDialog({
           </label>
           <div>
             <div>Preview</div>
-            {dataURL && (
+            {isOpen && dataURL && (
               <img
                 src={dataURL}
                 alt="Preview"
