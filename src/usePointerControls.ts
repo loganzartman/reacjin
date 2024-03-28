@@ -26,6 +26,10 @@ export function usePointerControls({
     useCallback(
       (e: PointerEvent) => {
         if (!selectedLayer) return;
+        if (e.currentTarget !== workspaceRef.current) return;
+
+        e.preventDefault();
+
         const dragState = dragStateRef.current;
         dragState.isDragging = true;
         dragState.startX = e.clientX;
@@ -36,7 +40,7 @@ export function usePointerControls({
         dragState.targetInitY =
           selectedLayer.effectsConfig?.transform?.translateY ?? 0;
       },
-      [selectedLayer],
+      [selectedLayer, workspaceRef],
     ),
     workspaceRef,
   );
@@ -84,6 +88,5 @@ export function usePointerControls({
       },
       [setLayers],
     ),
-    workspaceRef,
   );
 }

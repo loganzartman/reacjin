@@ -37,6 +37,7 @@ import {useUndoable} from '@/src/useUndoable';
 
 export default function ReacjinEditor() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const overlayRef = useRef<HTMLCanvasElement>(null);
   const editorAreaRef = useRef<HTMLDivElement>(null);
   const [imageSize] = useState([256, 256]);
   const [zoom, setZoom] = useState(1);
@@ -201,7 +202,11 @@ export default function ReacjinEditor() {
     : null;
   const SelectedLayerUIPanel = selectedLayerPlugin?.UIPanel;
 
-  usePointerControls({workspaceRef: editorAreaRef, selectedLayer, setLayers});
+  usePointerControls({
+    workspaceRef: overlayRef,
+    selectedLayer,
+    setLayers,
+  });
 
   if (!computing && computedCache.anyOutdated(layers)) {
     setComputing(true);
@@ -251,7 +256,8 @@ export default function ReacjinEditor() {
         </div>
         <div className="relative w-full h-full flex-1">
           <ImageCanvas
-            ref={canvasRef}
+            canvasRef={canvasRef}
+            overlayRef={overlayRef}
             width={imageSize[0]}
             height={imageSize[1]}
             zoom={zoom}
@@ -263,9 +269,9 @@ export default function ReacjinEditor() {
           />
           <div
             ref={editorAreaRef}
-            className="absolute left-8 top-8 right-8 bottom-8"
+            className="absolute left-8 top-8 right-8 bottom-8 pointer-events-none"
           >
-            <div className="absolute left-0 top-0 flex flex-col items-end gap-4">
+            <div className="absolute left-0 top-0 flex flex-col items-end gap-4 pointer-events-auto">
               <LayerPanel
                 layers={layers}
                 setLayers={setLayers}
@@ -274,7 +280,7 @@ export default function ReacjinEditor() {
                 dragConstraints={editorAreaRef}
               />
             </div>
-            <div className="absolute right-0 top-0">
+            <div className="absolute right-0 top-0 pointer-events-auto">
               <AnimatePresence>
                 {SelectedLayerUIPanel && ctx && (
                   <Panel
@@ -305,7 +311,7 @@ export default function ReacjinEditor() {
                 )}
               </AnimatePresence>
             </div>
-            <div className="absolute left-0 bottom-0">
+            <div className="absolute left-0 bottom-0 pointer-events-auto">
               <AnimatePresence>
                 {selectedLayer && ctx && (
                   <Panel title="Layer effects" dragConstraints={editorAreaRef}>
