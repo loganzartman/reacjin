@@ -4,7 +4,7 @@ export function drawBbox(
   bbox: [number, number, number, number],
   srcToDst: DOMMatrixReadOnly,
 ) {
-  const handleSize = 4;
+  const handleSize = 12;
   const T = srcToDst.multiply(srcCtx.getTransform());
   const p0 = T.transformPoint({x: bbox[0], y: bbox[1], z: 1});
   const p1 = T.transformPoint({x: bbox[2], y: bbox[1], z: 1});

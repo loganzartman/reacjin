@@ -1,6 +1,6 @@
 import {LayerEffect} from '@/src/effects/types';
 
-type TransformOptions = {
+export type TransformOptions = {
   scaleX: number;
   scaleY: number;
   translateX: number;

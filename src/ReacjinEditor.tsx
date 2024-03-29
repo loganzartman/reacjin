@@ -1,5 +1,6 @@
 'use client';
 
+import {Property} from 'csstype';
 import {AnimatePresence} from 'framer-motion';
 import {motion} from 'framer-motion';
 import React, {useCallback, useEffect, useRef, useState} from 'react';
@@ -71,6 +72,7 @@ export default function ReacjinEditor() {
   const [computing, setComputing] = useState(false);
   const [dropping, setDropping] = useState(false);
   const [showExportDialog, setShowExportDialog] = useState(false);
+  const [cursor, setCursor] = useState<Property.Cursor>('default');
 
   useEffect(() => {
     function handler(event: KeyboardEvent) {
@@ -203,9 +205,12 @@ export default function ReacjinEditor() {
   const SelectedLayerUIPanel = selectedLayerPlugin?.UIPanel;
 
   usePointerControls({
-    workspaceRef: overlayRef,
+    canvasRef,
+    overlayRef,
     selectedLayer,
     setLayers,
+    setCursor,
+    computedCache,
   });
 
   if (!computing && computedCache.anyOutdated(layers)) {
@@ -265,6 +270,7 @@ export default function ReacjinEditor() {
             selectedLayerID={selectedLayerID}
             computing={computing}
             computedCache={computedCache}
+            cursor={cursor}
             accurate={false}
           />
           <div

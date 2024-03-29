@@ -48,3 +48,22 @@ export const withEffects = ({
 
   for (const cleanup of cleanups) cleanup();
 };
+
+export const computeEffectsTransform = ({
+  effectsConfig,
+  ctx,
+}: {
+  effectsConfig?: EffectsConfig;
+  ctx: CanvasRenderingContext2D;
+}): DOMMatrix => {
+  let transform: DOMMatrix | null = null;
+  withEffects({
+    effectsConfig,
+    ctx,
+    drawCallback() {
+      transform = ctx.getTransform();
+    },
+  });
+  if (!transform) throw new Error('Failed to extract transform');
+  return transform;
+};

@@ -1,6 +1,7 @@
 'use client';
 
 import clsx from 'clsx';
+import type {Property} from 'csstype';
 import {useEffect, useState} from 'react';
 import React from 'react';
 
@@ -21,6 +22,7 @@ export const ImageCanvas = ({
   computing,
   computedCache,
   accurate,
+  cursor,
   canvasRef,
   overlayRef,
 }: {
@@ -32,6 +34,7 @@ export const ImageCanvas = ({
   computing: boolean;
   computedCache: ComputedCache;
   accurate: boolean;
+  cursor: Property.Cursor;
   canvasRef: React.RefObject<HTMLCanvasElement>;
   overlayRef: React.RefObject<HTMLCanvasElement>;
 }) => {
@@ -146,6 +149,7 @@ export const ImageCanvas = ({
         width={overlayWidth}
         height={overlayHeight}
         className="absolute top-0 left-0 w-full h-full"
+        style={{cursor}}
       ></canvas>
     </div>
   );

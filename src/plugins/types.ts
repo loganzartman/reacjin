@@ -14,6 +14,9 @@ export interface LayerPlugin<Options, Computed = unknown> {
     computed: Computed;
   }): void;
 
+  /**
+   * @returns [x0, y0, x1, y1] or null if the bbox is not available
+   */
   bbox?(params: {
     ctx: CanvasRenderingContext2D;
     options: Options;
