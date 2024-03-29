@@ -49,5 +49,10 @@ export default tseslint.config(
     // @ts-expect-error broken types
     rules: pluginHooks.configs.recommended.rules,
   },
+  {
+    rules: {
+      'react-hooks/exhaustive-deps': 'error',
+    },
+  },
   prettier,
 );

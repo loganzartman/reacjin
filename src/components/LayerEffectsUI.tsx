@@ -1,5 +1,5 @@
 import {allEffects, effectByID, EffectID} from '@/src/effects/registry';
-import {Layer} from '@/src/layer';
+import {Layer} from '@/src/layers/layer';
 
 export default function LayerEffectsUI({
   layer,

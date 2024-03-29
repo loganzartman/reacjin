@@ -83,7 +83,7 @@ export function ExportDialog({
     a.download = `${exportFilename}.${exportType}`;
     a.click();
     handleClose();
-  }, [dataURL, filename, handleClose]);
+  }, [dataURL, exportFilename, exportType, handleClose]);
 
   return (
     <Dialog
