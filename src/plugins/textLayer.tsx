@@ -4,8 +4,8 @@ import {
   StyledTextStyle,
 } from 'canvas-styled-text';
 
-import {allFonts, FontPicker} from '@/src/FontPicker';
-import {PanelRow} from '@/src/PanelRow';
+import {allFonts, FontPicker} from '@/src/components/FontPicker';
+import {PanelRow} from '@/src/components/PanelRow';
 import {LayerPlugin} from '@/src/plugins/types';
 
 export type TextLayerOptions = {

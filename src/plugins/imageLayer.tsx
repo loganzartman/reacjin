@@ -3,10 +3,10 @@
 import {drawStyledText} from 'canvas-styled-text';
 import {useState} from 'react';
 
-import {Button} from '@/src/Button';
-import {LoadingOverlay} from '@/src/LoadingOverlay';
-import {PanelRow} from '@/src/PanelRow';
-import {RemoveBgSection} from '@/src/plugins/RemoveBgSection';
+import {Button} from '@/src/components/Button';
+import {LoadingOverlay} from '@/src/components/LoadingOverlay';
+import {PanelRow} from '@/src/components/PanelRow';
+import {RemoveBgSection} from '@/src/components/RemoveBgSection';
 import {LayerPlugin} from '@/src/plugins/types';
 
 export type ImageLayerOptions = {

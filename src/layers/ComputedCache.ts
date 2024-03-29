@@ -1,4 +1,4 @@
-import {Layers} from '@/src/layer';
+import {Layers} from '@/src/layers/layer';
 import {pluginByID} from '@/src/plugins/registry';
 import {LayerComputeResult} from '@/src/plugins/types';
 

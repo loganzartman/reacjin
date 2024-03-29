@@ -13,27 +13,27 @@ import {
 } from 'react-icons/md';
 import {useLocalStorage} from 'usehooks-ts';
 
-import {Button} from '@/src/Button';
-import {ComboRange} from '@/src/ComboRange';
-import {ComputedCache} from '@/src/ComputedCache';
-import {ExportDialog} from '@/src/ExportDialog';
-import {FAB} from '@/src/FAB';
-import {ImageCanvas} from '@/src/ImageCanvas';
+import {Button} from '@/src/components/Button';
+import {ComboRange} from '@/src/components/ComboRange';
+import {ExportDialog} from '@/src/components/ExportDialog';
+import {FAB} from '@/src/components/FAB';
+import {ImageCanvas} from '@/src/components/ImageCanvas';
+import LayerEffectsUI from '@/src/components/LayerEffectsUI';
+import {LayerPanel} from '@/src/components/LayerPanel';
+import {Panel} from '@/src/components/Panel';
+import {PanelProvider} from '@/src/components/PanelContext';
+import {Toolbar} from '@/src/components/Toolbar';
+import {usePointerControls} from '@/src/hooks/usePointerControls';
+import {useUndoable} from '@/src/hooks/useUndoable';
+import {ComputedCache} from '@/src/layers/ComputedCache';
 import {
   createFillLayer,
   createImageLayer,
   createTextLayer,
   Layer,
   Layers,
-} from '@/src/layer';
-import LayerEffectsUI from '@/src/LayerEffectsUI';
-import {LayerPanel} from '@/src/LayerPanel';
-import {Panel} from '@/src/Panel';
-import {PanelProvider} from '@/src/PanelContext';
+} from '@/src/layers/layer';
 import {pluginByID} from '@/src/plugins/registry';
-import {Toolbar} from '@/src/Toolbar';
-import {usePointerControls} from '@/src/usePointerControls';
-import {useUndoable} from '@/src/useUndoable';
 
 export default function ReacjinEditor() {
   const canvasRef = useRef<HTMLCanvasElement>(null);

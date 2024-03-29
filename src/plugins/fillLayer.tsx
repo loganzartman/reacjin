@@ -1,4 +1,4 @@
-import {PanelRow} from '@/src/PanelRow';
+import {PanelRow} from '@/src/components/PanelRow';
 import {LayerPlugin} from '@/src/plugins/types';
 
 export type FillLayerOptions = {

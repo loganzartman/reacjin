@@ -1,13 +1,13 @@
 import {useState} from 'react';
 import {FaWandMagicSparkles} from 'react-icons/fa6';
 
-import {Button} from '@/src/Button';
+import {Button} from '@/src/components/Button';
+import {Section} from '@/src/components/Section';
+import {loadModel, removeBackground} from '@/src/image/removeBackground';
 import type {
   ImageLayerComputed,
   ImageLayerOptions,
 } from '@/src/plugins/imageLayer';
-import {loadModel, removeBackground} from '@/src/removeBackground';
-import {Section} from '@/src/Section';
 
 export function RemoveBgSection({
   options,

@@ -1,9 +1,9 @@
 import {useCallback, useMemo, useState} from 'react';
 import {MdOutlineDownload} from 'react-icons/md';
 
-import {Button} from '@/src/Button';
-import {ComboRange} from '@/src/ComboRange';
-import {Dialog} from '@/src/Dialog';
+import {Button} from '@/src/components/Button';
+import {ComboRange} from '@/src/components/ComboRange';
+import {Dialog} from '@/src/components/Dialog';
 
 const exportTypes = ['webp', 'png', 'jpeg'];
 

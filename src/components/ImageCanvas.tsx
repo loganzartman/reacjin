@@ -4,11 +4,11 @@ import clsx from 'clsx';
 import {useEffect, useState} from 'react';
 import React from 'react';
 
-import {ComputedCache} from '@/src/ComputedCache';
-import {drawBbox} from '@/src/drawBbox';
+import {LoadingOverlay} from '@/src/components/LoadingOverlay';
 import {withEffects} from '@/src/effects/registry';
-import {Layers} from '@/src/layer';
-import {LoadingOverlay} from '@/src/LoadingOverlay';
+import {drawBbox} from '@/src/image/drawBbox';
+import {ComputedCache} from '@/src/layers/ComputedCache';
+import {Layers} from '@/src/layers/layer';
 import {pluginByID} from '@/src/plugins/registry';
 import styles from '@/src/styles.module.css';
 

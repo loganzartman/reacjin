@@ -1,7 +1,7 @@
 import React, {useCallback, useRef} from 'react';
 import {useEventListener} from 'usehooks-ts';
 
-import {Layer, Layers} from '@/src/layer';
+import {Layer, Layers} from '@/src/layers/layer';
 
 export function usePointerControls({
   workspaceRef,

@@ -2,7 +2,7 @@ import {Dialog as HeadlessDialog, Transition} from '@headlessui/react';
 import React, {Fragment} from 'react';
 import {MdOutlineClose} from 'react-icons/md';
 
-import {Button} from '@/src/Button';
+import {Button} from '@/src/components/Button';
 
 export function Dialog({
   isOpen,

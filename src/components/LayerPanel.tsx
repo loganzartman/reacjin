@@ -8,8 +8,8 @@ import {
   MdOutlineLayers,
 } from 'react-icons/md';
 
-import {cloneLayer, Layer, Layers} from '@/src/layer';
-import {Panel} from '@/src/Panel';
+import {Panel} from '@/src/components/Panel';
+import {cloneLayer, Layer, Layers} from '@/src/layers/layer';
 
 export function LayerPanel({
   layers,
