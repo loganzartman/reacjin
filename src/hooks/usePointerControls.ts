@@ -8,7 +8,65 @@ import {ComputedCache} from '@/src/layers/ComputedCache';
 import {Layer, Layers} from '@/src/layers/layer';
 import {pluginByID} from '@/src/plugins/registry';
 
-type Operation = 'none' | 'move';
+type Operation = 'none' | 'move' | 'scale' | 'rotate';
+
+const scaleBorderSize = 16;
+const rotateBorderSize = 48;
+
+const opCursors: Record<Operation, Property.Cursor> = {
+  none: 'default',
+  move: 'move',
+  scale: 'se-resize',
+  rotate: 'crosshair',
+};
+
+function bboxContains(
+  bbox: [number, number, number, number],
+  x: number,
+  y: number,
+) {
+  const [x0, y0, x1, y1] = bbox;
+  return x >= x0 && x <= x1 && y >= y0 && y <= y1;
+}
+
+function dilateBbox(
+  [x0, y0, x1, y1]: [number, number, number, number],
+  d: number,
+): [number, number, number, number] {
+  return [x0 - d, y0 - d, x1 + d, y1 + d];
+}
+
+function len(point: DOMPointReadOnly): number {
+  return Math.hypot(point.x, point.y, point.z, point.w);
+}
+
+function normalize(point: DOMPointReadOnly): DOMPointReadOnly {
+  const length = len(point);
+  if (length === 0) return new DOMPointReadOnly();
+  return new DOMPointReadOnly(
+    point.x / length,
+    point.y / length,
+    point.z / length,
+    point.w / length,
+  );
+}
+
+function dot2(a: DOMPointReadOnly, b: DOMPointReadOnly): number {
+  return a.x * b.x + a.y * b.y;
+}
+
+function det2(a: DOMPointReadOnly, b: DOMPointReadOnly): number {
+  return a.x * b.y - a.y * b.x;
+}
+
+function sub(a: DOMPointReadOnly, b: DOMPointReadOnly): DOMPointReadOnly {
+  return new DOMPointReadOnly(a.x - b.x, a.y - b.y, a.z - b.z, a.w - b.w);
+}
+
+function scaledDistance(dist: number, transform: DOMMatrixReadOnly): number {
+  const {x, y} = transform.transformPoint({x: dist, y: 0, z: 0, w: 0});
+  return Math.hypot(x, y);
+}
 
 export function usePointerControls({
   canvasRef,
@@ -25,7 +83,8 @@ export function usePointerControls({
   selectedLayer: Layer<string> | undefined;
   computedCache: ComputedCache;
 }) {
-  const transformRef = useRef<DOMMatrixReadOnly>(new DOMMatrixReadOnly());
+  const layerToCanvasRef = useRef<DOMMatrixReadOnly>(new DOMMatrixReadOnly());
+  const canvasToLayerRef = useRef<DOMMatrixReadOnly>(new DOMMatrixReadOnly());
   const dragStateRef = useRef({
     operation: 'none' as Operation,
     isDragging: false,
@@ -34,12 +93,19 @@ export function usePointerControls({
     targetLayer: undefined as Layer<string> | undefined,
     targetInitX: 0,
     targetInitY: 0,
+    targetInitR: 0,
+    targetInitSx: 1,
+    targetInitSy: 1,
   });
 
   const ctx = canvasRef.current?.getContext('2d');
   if (ctx && selectedLayer) {
     const {effectsConfig} = selectedLayer;
-    transformRef.current = computeEffectsTransform({effectsConfig, ctx});
+    layerToCanvasRef.current = computeEffectsTransform({
+      effectsConfig,
+      ctx,
+    });
+    canvasToLayerRef.current = layerToCanvasRef.current.inverse();
   }
 
   const getOperation = useCallback(
@@ -55,14 +121,41 @@ export function usePointerControls({
       const bbox = plugin.bbox({ctx, options, computed});
       if (!bbox) return 'none';
 
-      const transform = transformRef.current;
-      const {x, y} = transform
-        .inverse()
-        .transformPoint({x: canvasX, y: canvasY, z: 1});
+      const canvasToLayer = canvasToLayerRef.current;
+      const {x, y} = canvasToLayer.transformPoint({
+        x: canvasX,
+        y: canvasY,
+        z: 0,
+        w: 1,
+      });
 
-      if (x >= bbox[0] && x <= bbox[2] && y >= bbox[1] && y <= bbox[3]) {
+      if (bboxContains(bbox, x, y)) {
         return 'move';
       }
+
+      if (
+        bboxContains(
+          dilateBbox(bbox, scaledDistance(scaleBorderSize, canvasToLayer)),
+          x,
+          y,
+        )
+      ) {
+        return 'scale';
+      }
+
+      if (
+        bboxContains(
+          dilateBbox(
+            bbox,
+            scaledDistance(scaleBorderSize + rotateBorderSize, canvasToLayer),
+          ),
+          x,
+          y,
+        )
+      ) {
+        return 'rotate';
+      }
+
       return 'none';
     },
     [computedCache, ctx, selectedLayer],
@@ -110,13 +203,19 @@ export function usePointerControls({
         const dragState = dragStateRef.current;
         dragState.isDragging = true;
         dragState.operation = operation;
-        dragState.startX = e.clientX;
-        dragState.startY = e.clientY;
+        dragState.startX = canvasX;
+        dragState.startY = canvasY;
         dragState.targetLayer = selectedLayer;
         dragState.targetInitX =
           selectedLayer.effectsConfig?.transform?.translateX ?? 0;
         dragState.targetInitY =
           selectedLayer.effectsConfig?.transform?.translateY ?? 0;
+        dragState.targetInitR =
+          selectedLayer.effectsConfig?.transform?.rotate ?? 0;
+        dragState.targetInitSx =
+          selectedLayer.effectsConfig?.transform?.scaleX ?? 1;
+        dragState.targetInitSy =
+          selectedLayer.effectsConfig?.transform?.scaleY ?? 1;
       },
       [selectedLayer, overlayRef, canvasRef, getOperation],
     ),
@@ -137,25 +236,55 @@ export function usePointerControls({
       (e: PointerEvent) => {
         if (!canvasRef.current) return;
         const dragState = dragStateRef.current;
+        const canvasRect = canvasRef.current.getBoundingClientRect();
+        const canvasX = e.clientX - canvasRect.left;
+        const canvasY = e.clientY - canvasRect.top;
+        const origin = new DOMPointReadOnly(0, 0, 0, 1);
+        const startPos = canvasToLayerRef.current.transformPoint({
+          x: dragState.startX,
+          y: dragState.startY,
+          z: 0,
+          w: 1,
+        });
+        const currentPos = canvasToLayerRef.current.transformPoint({
+          x: canvasX,
+          y: canvasY,
+          z: 0,
+          w: 1,
+        });
 
         if (!dragState.isDragging) {
-          const canvasRect = canvasRef.current.getBoundingClientRect();
-          const canvasX = e.clientX - canvasRect.left;
-          const canvasY = e.clientY - canvasRect.top;
           const operation = getOperation(canvasX, canvasY);
-          setCursor({move: 'move', none: 'default'}[operation] ?? 'default');
+          setCursor(opCursors[operation] ?? 'default');
         } else {
           e.preventDefault();
 
           if (dragState.operation === 'move') {
-            const dx = e.clientX - dragState.startX;
-            const dy = e.clientY - dragState.startY;
+            const dx = canvasX - dragState.startX;
+            const dy = canvasY - dragState.startY;
             const translateX = dragState.targetInitX + dx;
             const translateY = dragState.targetInitY + dy;
-
             updateTransform({translateX, translateY});
-          } else {
-            // noop
+          } else if (dragState.operation === 'scale') {
+            const startDist = len(sub(startPos, origin));
+            const currentDist = dot2(
+              sub(currentPos, startPos),
+              normalize(sub(startPos, origin)),
+            );
+            const factor = 1 + currentDist / startDist;
+            const scaleX = dragState.targetInitSx * factor;
+            const scaleY = dragState.targetInitSy * factor;
+            updateTransform({scaleX, scaleY});
+          } else if (dragState.operation === 'rotate') {
+            const startAngle = normalize(sub(startPos, origin));
+            const currentAngle = normalize(sub(currentPos, origin));
+            const rotate =
+              dragState.targetInitR +
+              Math.atan2(
+                det2(startAngle, currentAngle),
+                dot2(startAngle, currentAngle),
+              );
+            updateTransform({rotate});
           }
         }
       },
