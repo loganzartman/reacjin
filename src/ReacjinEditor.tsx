@@ -24,6 +24,7 @@ import {LayerPanel} from '@/src/components/LayerPanel';
 import {Panel} from '@/src/components/Panel';
 import {PanelProvider} from '@/src/components/PanelContext';
 import {Toolbar} from '@/src/components/Toolbar';
+import {useHotkeys} from '@/src/hooks/useHotkeys';
 import {usePointerControls} from '@/src/hooks/usePointerControls';
 import {useUndoable} from '@/src/hooks/useUndoable';
 import {ComputedCache} from '@/src/layers/ComputedCache';
@@ -73,6 +74,28 @@ export default function ReacjinEditor() {
   const [dropping, setDropping] = useState(false);
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [cursor, setCursor] = useState<Property.Cursor>('default');
+
+  const selectedLayer = layers.find((layer) => layer.id === selectedLayerID);
+  const selectedLayerPlugin = selectedLayer
+    ? pluginByID(selectedLayer.pluginID)
+    : null;
+  const SelectedLayerUIPanel = selectedLayerPlugin?.UIPanel;
+  const ctx = canvasRef.current?.getContext('2d');
+
+  const computed = selectedLayer
+    ? computedCache.get(selectedLayer.pluginID, selectedLayer.options)?.computed
+    : null;
+
+  useHotkeys({setLayers, setSelectedLayerID});
+
+  usePointerControls({
+    canvasRef,
+    overlayRef,
+    selectedLayer,
+    setLayers,
+    setCursor,
+    computedCache,
+  });
 
   useEffect(() => {
     function handler(event: KeyboardEvent) {
@@ -139,34 +162,6 @@ export default function ReacjinEditor() {
     [setLayers],
   );
 
-  useEffect(() => {
-    const handlePaste = (event: ClipboardEvent) => {
-      if (!event.clipboardData) return;
-      if (event.clipboardData.files.length > 0) {
-        const file = event.clipboardData.files[0];
-        if (file.type.startsWith('image/')) {
-          const reader = new FileReader();
-          reader.onload = (event) => {
-            const src = event.target?.result as string;
-            const newLayer = createImageLayer({src});
-            setLayers((layers) => [newLayer, ...layers]);
-            setSelectedLayerID(newLayer.id);
-          };
-          reader.readAsDataURL(file);
-        }
-      } else {
-        const text = event.clipboardData.getData('text');
-        if (text) {
-          const newLayer = createTextLayer({text});
-          setLayers((layers) => [newLayer, ...layers]);
-          setSelectedLayerID(newLayer.id);
-        }
-      }
-    };
-    document.addEventListener('paste', handlePaste);
-    return () => document.removeEventListener('paste', handlePaste);
-  }, [setLayers]);
-
   const handleSetOptions = useCallback(
     (targetLayer: Layer<string>, options: unknown) => {
       setLayers((layers) =>
@@ -198,32 +193,11 @@ export default function ReacjinEditor() {
 
   // TODO: clean up all computed results on unmount
 
-  const selectedLayer = layers.find((layer) => layer.id === selectedLayerID);
-  const selectedLayerPlugin = selectedLayer
-    ? pluginByID(selectedLayer.pluginID)
-    : null;
-  const SelectedLayerUIPanel = selectedLayerPlugin?.UIPanel;
-
-  usePointerControls({
-    canvasRef,
-    overlayRef,
-    selectedLayer,
-    setLayers,
-    setCursor,
-    computedCache,
-  });
-
   if (!computing && computedCache.anyOutdated(layers)) {
     setComputing(true);
     computedCache.computeOutdated(layers).then(() => setComputing(false));
     return null;
   }
-
-  const computed = selectedLayer
-    ? computedCache.get(selectedLayer.pluginID, selectedLayer.options)?.computed
-    : null;
-
-  const ctx = canvasRef.current?.getContext('2d');
 
   return (
     <PanelProvider>

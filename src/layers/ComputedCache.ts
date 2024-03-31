@@ -8,7 +8,7 @@ export class ComputedCache {
   anyOutdated(layers: Layers): boolean {
     return layers.some(({pluginID, options}) => {
       const plugin = pluginByID(pluginID);
-      if ('compute' in plugin) {
+      if (typeof plugin.compute === 'function') {
         if (!this.has(pluginID, options)) {
           return true;
         }
@@ -21,10 +21,10 @@ export class ComputedCache {
     await Promise.all(
       layers.map(async ({pluginID, options}) => {
         const plugin = pluginByID(pluginID);
-        if ('compute' in plugin) {
+        if (typeof plugin.compute === 'function') {
           if (!this.has(pluginID, options)) {
             // TODO: run cleanup on old results
-            const result = await plugin.compute!(options);
+            const result = await plugin.compute(options);
             this.set(pluginID, options, result);
           }
         }
