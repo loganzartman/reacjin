@@ -128,7 +128,10 @@ export function usePointerControls({
         effectsConfig: layer.effectsConfig,
         ctx: ctx,
       });
-      return layerToCanvas.inverse();
+      const canvasRect = ctx.canvas.getBoundingClientRect();
+      const scaleX = ctx.canvas.width / canvasRect.width;
+      const scaleY = ctx.canvas.height / canvasRect.height;
+      return layerToCanvas.inverse().scale(scaleX, scaleY);
     },
     [ctx],
   );
@@ -318,12 +321,8 @@ export function usePointerControls({
             e.preventDefault();
 
             const canvasRect = canvasRef.current.getBoundingClientRect();
-            const canvasX =
-              ((e.clientX - canvasRect.left) / canvasRect.width) *
-              canvasRef.current.width;
-            const canvasY =
-              ((e.clientY - canvasRect.top) / canvasRect.height) *
-              canvasRef.current.height;
+            const canvasX = e.clientX - canvasRect.left;
+            const canvasY = e.clientY - canvasRect.top;
             const operation = getOperation(canvasX, canvasY);
 
             const dragState = dragStateRef.current;
@@ -371,12 +370,8 @@ export function usePointerControls({
 
         const dragState = dragStateRef.current;
         const canvasRect = canvasRef.current.getBoundingClientRect();
-        const canvasX =
-          ((e.clientX - canvasRect.left) / canvasRect.width) *
-          canvasRef.current.width;
-        const canvasY =
-          ((e.clientY - canvasRect.top) / canvasRect.height) *
-          canvasRef.current.height;
+        const canvasX = e.clientX - canvasRect.left;
+        const canvasY = e.clientY - canvasRect.top;
 
         if (dragState.isDragging) {
           e.preventDefault();
