@@ -318,8 +318,12 @@ export function usePointerControls({
             e.preventDefault();
 
             const canvasRect = canvasRef.current.getBoundingClientRect();
-            const canvasX = e.clientX - canvasRect.left;
-            const canvasY = e.clientY - canvasRect.top;
+            const canvasX =
+              ((e.clientX - canvasRect.left) / canvasRect.width) *
+              canvasRef.current.width;
+            const canvasY =
+              ((e.clientY - canvasRect.top) / canvasRect.height) *
+              canvasRef.current.height;
             const operation = getOperation(canvasX, canvasY);
 
             const dragState = dragStateRef.current;
@@ -367,8 +371,12 @@ export function usePointerControls({
 
         const dragState = dragStateRef.current;
         const canvasRect = canvasRef.current.getBoundingClientRect();
-        const canvasX = e.clientX - canvasRect.left;
-        const canvasY = e.clientY - canvasRect.top;
+        const canvasX =
+          ((e.clientX - canvasRect.left) / canvasRect.width) *
+          canvasRef.current.width;
+        const canvasY =
+          ((e.clientY - canvasRect.top) / canvasRect.height) *
+          canvasRef.current.height;
 
         if (dragState.isDragging) {
           e.preventDefault();
