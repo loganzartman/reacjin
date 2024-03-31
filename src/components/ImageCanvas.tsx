@@ -148,6 +148,11 @@ export const ImageCanvas = ({
         ref={overlayRef}
         width={overlayWidth}
         height={overlayHeight}
+        onPointerDown={() => {
+          if (document.activeElement && 'blur' in document.activeElement) {
+            (document.activeElement as HTMLElement).blur();
+          }
+        }}
         className="absolute top-0 left-0 w-full h-full"
         style={{cursor}}
       ></canvas>

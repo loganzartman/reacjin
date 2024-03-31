@@ -86,7 +86,7 @@ export default function ReacjinEditor() {
     ? computedCache.get(selectedLayer.pluginID, selectedLayer.options)?.computed
     : null;
 
-  useHotkeys({setLayers, setSelectedLayerID});
+  useHotkeys({selectedLayer, setLayers, setSelectedLayerID});
 
   usePointerControls({
     canvasRef,
