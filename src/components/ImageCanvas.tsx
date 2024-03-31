@@ -2,7 +2,7 @@
 
 import clsx from 'clsx';
 import type {Property} from 'csstype';
-import {useEffect, useState} from 'react';
+import {useCallback, useEffect, useMemo, useState} from 'react';
 import React from 'react';
 
 import {LoadingOverlay} from '@/src/components/LoadingOverlay';
@@ -45,17 +45,13 @@ export const ImageCanvas = ({
   const overlayWidth = overlayRef.current?.offsetWidth ?? 256;
   const overlayHeight = overlayRef.current?.offsetHeight ?? 256;
 
-  useEffect(() => {
-    if (computing) return;
-    if (!canvasRef.current) return;
-    if (!overlayRef.current) return;
-    if (!displayRef.current) return;
-    const ctx = canvasRef.current.getContext('2d')!;
-    const overlayCtx = overlayRef.current.getContext('2d')!;
+  const getCtxToOverlay = useCallback(() => {
+    if (!overlayRef.current) return null;
+    if (!displayRef.current) return null;
 
     const overlayRect = overlayRef.current.getBoundingClientRect();
     const displayRect = displayRef.current.getBoundingClientRect();
-    const ctxToOverlay = new DOMMatrixReadOnly([
+    return new DOMMatrixReadOnly([
       zoom,
       0,
       0,
@@ -63,14 +59,15 @@ export const ImageCanvas = ({
       displayRect.left - overlayRect.left,
       displayRect.top - overlayRect.top,
     ]);
+  }, [displayRef, overlayRef, zoom]);
 
+  // draw image
+  useEffect(() => {
+    if (computing) return;
+    if (!canvasRef.current) return;
+
+    const ctx = canvasRef.current.getContext('2d')!;
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-    overlayCtx.clearRect(
-      0,
-      0,
-      overlayCtx.canvas.width,
-      overlayCtx.canvas.height,
-    );
 
     ctx.save();
     for (let i = layers.length - 1; i >= 0; --i) {
@@ -83,6 +80,42 @@ export const ImageCanvas = ({
         ctx,
         drawCallback: () => {
           plugin.draw({ctx, options, computed});
+        },
+      });
+    }
+    ctx.restore();
+
+    if (accurate) setDataURL(canvasRef.current.toDataURL());
+  }, [accurate, canvasRef, computedCache, computing, layers]);
+
+  // draw overlay
+  useEffect(() => {
+    if (computing) return;
+    if (!canvasRef.current) return;
+    if (!overlayRef.current) return;
+
+    const ctxToOverlay = getCtxToOverlay();
+    if (!ctxToOverlay) return;
+
+    const ctx = canvasRef.current.getContext('2d')!;
+    const overlayCtx = overlayRef.current.getContext('2d')!;
+
+    overlayCtx.clearRect(
+      0,
+      0,
+      overlayCtx.canvas.width,
+      overlayCtx.canvas.height,
+    );
+
+    for (let i = layers.length - 1; i >= 0; --i) {
+      const layer = layers[i];
+      const plugin = pluginByID(layer.pluginID);
+      const {options} = layer;
+      const {computed} = computedCache.get(layer.pluginID, options) ?? {};
+      withEffects({
+        effectsConfig: layer.effectsConfig,
+        ctx,
+        drawCallback: () => {
           if (layer.id === selectedLayerID) {
             const bbox = plugin.bbox?.({ctx, options, computed});
             if (bbox) drawBbox(ctx, overlayCtx, bbox, ctxToOverlay);
@@ -90,25 +123,23 @@ export const ImageCanvas = ({
         },
       });
     }
-    ctx.restore();
-
-    if (accurate) setDataURL(canvasRef.current.toDataURL());
   }, [
-    computing,
-    computedCache,
-    layers,
-    selectedLayerID,
-    zoom,
-    accurate,
-    displayRef,
     canvasRef,
+    computedCache,
+    computing,
+    getCtxToOverlay,
+    layers,
     overlayRef,
+    selectedLayerID,
   ]);
 
-  const sizeStyle = {
-    width: `${(width * zoom).toFixed(0)}px`,
-    height: `${(height * zoom).toFixed(0)}px`,
-  };
+  const sizeStyle = useMemo(
+    () => ({
+      width: `${(width * zoom).toFixed(0)}px`,
+      height: `${(height * zoom).toFixed(0)}px`,
+    }),
+    [height, width, zoom],
+  );
 
   return (
     <div className="absolute left-0 top-0 right-0 bottom-0 overflow-auto flex flex-col items-center justify-center">
