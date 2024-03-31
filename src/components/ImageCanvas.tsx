@@ -19,6 +19,7 @@ export const ImageCanvas = ({
   zoom,
   layers,
   selectedLayerID,
+  hoveredLayerID,
   computing,
   computedCache,
   accurate,
@@ -31,6 +32,7 @@ export const ImageCanvas = ({
   zoom: number;
   layers: Layers;
   selectedLayerID: string | null;
+  hoveredLayerID: string | null;
   computing: boolean;
   computedCache: ComputedCache;
   accurate: boolean;
@@ -107,27 +109,40 @@ export const ImageCanvas = ({
       overlayCtx.canvas.height,
     );
 
+    overlayCtx.save();
     for (let i = layers.length - 1; i >= 0; --i) {
       const layer = layers[i];
       const plugin = pluginByID(layer.pluginID);
       const {options} = layer;
       const {computed} = computedCache.get(layer.pluginID, options) ?? {};
-      withEffects({
-        effectsConfig: layer.effectsConfig,
-        ctx,
-        drawCallback: () => {
-          if (layer.id === selectedLayerID) {
+      const selected = layer.id === selectedLayerID;
+      const hovered = layer.id === hoveredLayerID;
+      if (selected || hovered) {
+        withEffects({
+          effectsConfig: layer.effectsConfig,
+          ctx,
+          drawCallback: () => {
             const bbox = plugin.bbox?.({ctx, options, computed});
-            if (bbox) drawBbox(ctx, overlayCtx, bbox, ctxToOverlay);
-          }
-        },
-      });
+            if (bbox) {
+              drawBbox({
+                srcCtx: ctx,
+                dstCtx: overlayCtx,
+                bbox,
+                srcToDst: ctxToOverlay,
+                selected,
+              });
+            }
+          },
+        });
+      }
     }
+    overlayCtx.restore();
   }, [
     canvasRef,
     computedCache,
     computing,
     getCtxToOverlay,
+    hoveredLayerID,
     layers,
     overlayRef,
     selectedLayerID,

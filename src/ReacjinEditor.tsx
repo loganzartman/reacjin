@@ -69,6 +69,7 @@ export default function ReacjinEditor() {
     ]),
   );
   const [selectedLayerID, setSelectedLayerID] = useState<string | null>(null);
+  const [hoveredLayerID, setHoveredLayerID] = useState<string | null>(null);
   const [computedCache] = useState(() => new ComputedCache());
   const [computing, setComputing] = useState(false);
   const [dropping, setDropping] = useState(false);
@@ -91,8 +92,12 @@ export default function ReacjinEditor() {
   usePointerControls({
     canvasRef,
     overlayRef,
-    selectedLayer,
+    layers,
     setLayers,
+    hoveredLayerID,
+    setHoveredLayerID,
+    selectedLayerID,
+    setSelectedLayerID,
     setCursor,
     computedCache,
   });
@@ -242,6 +247,7 @@ export default function ReacjinEditor() {
             zoom={zoom}
             layers={layers}
             selectedLayerID={selectedLayerID}
+            hoveredLayerID={hoveredLayerID}
             computing={computing}
             computedCache={computedCache}
             cursor={cursor}

@@ -11,7 +11,7 @@ import {pluginByID} from '@/src/plugins/registry';
 type Operation = 'none' | 'move' | 'scale' | 'rotate';
 
 const scaleBorderSize = 16;
-const rotateBorderSize = 48;
+const rotateBorderSize = 32;
 
 const opCursors: Record<Operation, Property.Cursor> = {
   none: 'default',
@@ -71,20 +71,28 @@ function scaledDistance(dist: number, transform: DOMMatrixReadOnly): number {
 export function usePointerControls({
   canvasRef,
   overlayRef,
+  layers,
   setLayers,
   setCursor,
-  selectedLayer,
+  hoveredLayerID,
+  setHoveredLayerID,
+  selectedLayerID,
+  setSelectedLayerID,
   computedCache,
 }: {
   canvasRef: React.RefObject<HTMLCanvasElement>;
   overlayRef: React.RefObject<HTMLCanvasElement>;
+  layers: Layers;
   setLayers: React.Dispatch<React.SetStateAction<Layers>>;
   setCursor: React.Dispatch<React.SetStateAction<Property.Cursor>>;
-  selectedLayer: Layer<string> | undefined;
+  hoveredLayerID: string | null;
+  setHoveredLayerID: React.Dispatch<React.SetStateAction<string | null>>;
+  selectedLayerID: string | null;
+  setSelectedLayerID: React.Dispatch<React.SetStateAction<string | null>>;
   computedCache: ComputedCache;
 }) {
-  const layerToCanvasRef = useRef<DOMMatrixReadOnly>(new DOMMatrixReadOnly());
-  const canvasToLayerRef = useRef<DOMMatrixReadOnly>(new DOMMatrixReadOnly());
+  const selectedLayer = layers.find((layer) => layer.id === selectedLayerID);
+
   const dragStateRef = useRef({
     operation: 'none' as Operation,
     isDragging: false,
@@ -99,33 +107,43 @@ export function usePointerControls({
   });
 
   const ctx = canvasRef.current?.getContext('2d');
-  if (ctx && selectedLayer) {
-    const {effectsConfig} = selectedLayer;
-    layerToCanvasRef.current = computeEffectsTransform({
-      effectsConfig,
-      ctx,
-    });
-    canvasToLayerRef.current = layerToCanvasRef.current.inverse();
-  }
+
+  const getLayerBbox = useCallback(
+    (layer: Layer<string>) => {
+      if (!ctx) return null;
+      const {pluginID, options} = layer;
+      const plugin = pluginByID(pluginID);
+      if (!plugin.bbox) return null;
+
+      const computed = computedCache.get(pluginID, options)?.computed;
+      return plugin.bbox({ctx, options, computed});
+    },
+    [computedCache, ctx],
+  );
+
+  const getCanvasToLayer = useCallback(
+    (layer: Layer<string>) => {
+      if (!ctx) throw new Error('Canvas context not available');
+      const layerToCanvas = computeEffectsTransform({
+        effectsConfig: layer.effectsConfig,
+        ctx: ctx,
+      });
+      return layerToCanvas.inverse();
+    },
+    [ctx],
+  );
 
   const getOperation = useCallback(
     (canvasX: number, canvasY: number): Operation => {
-      if (!ctx) return 'none';
       if (!selectedLayer) return 'none';
 
-      const {pluginID, options} = selectedLayer;
-      const plugin = pluginByID(pluginID);
-      if (!plugin.bbox) return 'none';
-
-      const computed = computedCache.get(pluginID, options)?.computed;
-      const bbox = plugin.bbox({ctx, options, computed});
+      const bbox = getLayerBbox(selectedLayer);
       if (!bbox) return 'none';
 
-      const canvasToLayer = canvasToLayerRef.current;
+      const canvasToLayer = getCanvasToLayer(selectedLayer);
       const {x, y} = canvasToLayer.transformPoint({
         x: canvasX,
         y: canvasY,
-        z: 0,
         w: 1,
       });
 
@@ -158,7 +176,7 @@ export function usePointerControls({
 
       return 'none';
     },
-    [computedCache, ctx, selectedLayer],
+    [getCanvasToLayer, getLayerBbox, selectedLayer],
   );
 
   const updateTransform = useCallback(
@@ -185,39 +203,150 @@ export function usePointerControls({
     [setLayers],
   );
 
+  const updateHoveredLayer = useCallback(
+    (canvasX: number, canvasY: number) => {
+      const operation = getOperation(canvasX, canvasY);
+      setCursor(opCursors[operation] ?? 'default');
+
+      for (const layer of [
+        ...(selectedLayer ? [selectedLayer] : []),
+        ...layers,
+      ]) {
+        let bbox = getLayerBbox(layer);
+        if (!bbox) continue;
+
+        if (layer.id === selectedLayerID) {
+          bbox = dilateBbox(
+            bbox,
+            scaledDistance(
+              scaleBorderSize + rotateBorderSize,
+              getCanvasToLayer(layer),
+            ),
+          );
+        }
+
+        const canvasToLayer = getCanvasToLayer(layer);
+        const {x, y} = canvasToLayer.transformPoint({
+          x: canvasX,
+          y: canvasY,
+          w: 1,
+        });
+
+        if (bboxContains(bbox, x, y)) {
+          setHoveredLayerID(layer.id);
+          return;
+        }
+      }
+      setHoveredLayerID(null);
+    },
+    [
+      getCanvasToLayer,
+      getLayerBbox,
+      getOperation,
+      layers,
+      selectedLayer,
+      selectedLayerID,
+      setCursor,
+      setHoveredLayerID,
+    ],
+  );
+
+  const updateDraggedLayer = useCallback(
+    (canvasX: number, canvasY: number) => {
+      if (!selectedLayer) return;
+
+      const dragState = dragStateRef.current;
+      const origin = new DOMPointReadOnly(0, 0, 0, 1);
+      const canvasToLayer = getCanvasToLayer(selectedLayer);
+      const startPos = canvasToLayer.transformPoint({
+        x: dragState.startX,
+        y: dragState.startY,
+        z: 0,
+        w: 1,
+      });
+      const currentPos = canvasToLayer.transformPoint({
+        x: canvasX,
+        y: canvasY,
+        z: 0,
+        w: 1,
+      });
+
+      if (dragState.operation === 'move') {
+        const dx = canvasX - dragState.startX;
+        const dy = canvasY - dragState.startY;
+        const translateX = dragState.targetInitX + dx;
+        const translateY = dragState.targetInitY + dy;
+        updateTransform({translateX, translateY});
+      } else if (dragState.operation === 'scale') {
+        const startDist = len(sub(startPos, origin));
+        const currentDist = dot2(
+          sub(currentPos, startPos),
+          normalize(sub(startPos, origin)),
+        );
+        const factor = 1 + currentDist / startDist;
+        const scaleX = dragState.targetInitSx * factor;
+        const scaleY = dragState.targetInitSy * factor;
+        updateTransform({scaleX, scaleY});
+      } else if (dragState.operation === 'rotate') {
+        const startAngle = normalize(sub(startPos, origin));
+        const currentAngle = normalize(sub(currentPos, origin));
+        const rotate =
+          dragState.targetInitR +
+          Math.atan2(
+            det2(startAngle, currentAngle),
+            dot2(startAngle, currentAngle),
+          );
+        updateTransform({rotate});
+      }
+    },
+    [getCanvasToLayer, selectedLayer, updateTransform],
+  );
+
   useEventListener(
     'pointerdown',
     useCallback(
       (e: PointerEvent) => {
-        if (!selectedLayer) return;
         if (e.currentTarget !== overlayRef.current) return;
         if (!canvasRef.current) return;
 
-        e.preventDefault();
+        if (!hoveredLayerID) {
+          setSelectedLayerID(null);
+        } else if (hoveredLayerID !== selectedLayerID) {
+          setSelectedLayerID(hoveredLayerID);
+        } else {
+          if (selectedLayer) {
+            e.preventDefault();
 
-        const canvasRect = canvasRef.current.getBoundingClientRect();
-        const canvasX = e.clientX - canvasRect.left;
-        const canvasY = e.clientY - canvasRect.top;
-        const operation = getOperation(canvasX, canvasY);
+            const canvasRect = canvasRef.current.getBoundingClientRect();
+            const canvasX = e.clientX - canvasRect.left;
+            const canvasY = e.clientY - canvasRect.top;
+            const operation = getOperation(canvasX, canvasY);
 
-        const dragState = dragStateRef.current;
-        dragState.isDragging = true;
-        dragState.operation = operation;
-        dragState.startX = canvasX;
-        dragState.startY = canvasY;
-        dragState.targetLayer = selectedLayer;
-        dragState.targetInitX =
-          selectedLayer.effectsConfig?.transform?.translateX ?? 0;
-        dragState.targetInitY =
-          selectedLayer.effectsConfig?.transform?.translateY ?? 0;
-        dragState.targetInitR =
-          selectedLayer.effectsConfig?.transform?.rotate ?? 0;
-        dragState.targetInitSx =
-          selectedLayer.effectsConfig?.transform?.scaleX ?? 1;
-        dragState.targetInitSy =
-          selectedLayer.effectsConfig?.transform?.scaleY ?? 1;
+            const dragState = dragStateRef.current;
+            dragState.isDragging = true;
+            dragState.operation = operation;
+            dragState.startX = canvasX;
+            dragState.startY = canvasY;
+            dragState.targetLayer = selectedLayer;
+            const {translateX, translateY, rotate, scaleX, scaleY} =
+              selectedLayer.effectsConfig?.transform ?? {};
+            dragState.targetInitX = translateX ?? 0;
+            dragState.targetInitY = translateY ?? 0;
+            dragState.targetInitR = rotate ?? 0;
+            dragState.targetInitSx = scaleX ?? 1;
+            dragState.targetInitSy = scaleY ?? 1;
+          }
+        }
       },
-      [selectedLayer, overlayRef, canvasRef, getOperation],
+      [
+        overlayRef,
+        canvasRef,
+        hoveredLayerID,
+        selectedLayerID,
+        setSelectedLayerID,
+        selectedLayer,
+        getOperation,
+      ],
     ),
     overlayRef,
   );
@@ -235,60 +364,20 @@ export function usePointerControls({
     useCallback(
       (e: PointerEvent) => {
         if (!canvasRef.current) return;
+
         const dragState = dragStateRef.current;
         const canvasRect = canvasRef.current.getBoundingClientRect();
         const canvasX = e.clientX - canvasRect.left;
         const canvasY = e.clientY - canvasRect.top;
-        const origin = new DOMPointReadOnly(0, 0, 0, 1);
-        const startPos = canvasToLayerRef.current.transformPoint({
-          x: dragState.startX,
-          y: dragState.startY,
-          z: 0,
-          w: 1,
-        });
-        const currentPos = canvasToLayerRef.current.transformPoint({
-          x: canvasX,
-          y: canvasY,
-          z: 0,
-          w: 1,
-        });
 
-        if (!dragState.isDragging) {
-          const operation = getOperation(canvasX, canvasY);
-          setCursor(opCursors[operation] ?? 'default');
-        } else {
+        if (dragState.isDragging) {
           e.preventDefault();
-
-          if (dragState.operation === 'move') {
-            const dx = canvasX - dragState.startX;
-            const dy = canvasY - dragState.startY;
-            const translateX = dragState.targetInitX + dx;
-            const translateY = dragState.targetInitY + dy;
-            updateTransform({translateX, translateY});
-          } else if (dragState.operation === 'scale') {
-            const startDist = len(sub(startPos, origin));
-            const currentDist = dot2(
-              sub(currentPos, startPos),
-              normalize(sub(startPos, origin)),
-            );
-            const factor = 1 + currentDist / startDist;
-            const scaleX = dragState.targetInitSx * factor;
-            const scaleY = dragState.targetInitSy * factor;
-            updateTransform({scaleX, scaleY});
-          } else if (dragState.operation === 'rotate') {
-            const startAngle = normalize(sub(startPos, origin));
-            const currentAngle = normalize(sub(currentPos, origin));
-            const rotate =
-              dragState.targetInitR +
-              Math.atan2(
-                det2(startAngle, currentAngle),
-                dot2(startAngle, currentAngle),
-              );
-            updateTransform({rotate});
-          }
+          updateDraggedLayer(canvasX, canvasY);
+        } else {
+          updateHoveredLayer(canvasX, canvasY);
         }
       },
-      [canvasRef, getOperation, setCursor, updateTransform],
+      [canvasRef, updateDraggedLayer, updateHoveredLayer],
     ),
   );
 }

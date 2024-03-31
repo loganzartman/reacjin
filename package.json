@@ -7,6 +7,7 @@
   "scripts": {
     "start": "parcel",
     "build": "parcel build",
+    "check": "pnpm lint && pnpm types",
     "lint": "eslint . && prettier --check .",
     "lint:fix": "eslint --fix . && prettier --write .",
     "types": "tsc --noEmit"
