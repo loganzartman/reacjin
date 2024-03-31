@@ -257,9 +257,11 @@ export function usePointerControls({
   const updateDraggedLayer = useCallback(
     (canvasX: number, canvasY: number) => {
       if (!selectedLayer) return;
+      if (!ctx) return;
 
       const dragState = dragStateRef.current;
       const origin = new DOMPointReadOnly(0, 0, 0, 1);
+      const canvasRect = ctx.canvas.getBoundingClientRect();
       const canvasToLayer = getCanvasToLayer(selectedLayer);
       const startPos = canvasToLayer.transformPoint({
         x: dragState.startX,
@@ -275,8 +277,11 @@ export function usePointerControls({
       });
 
       if (dragState.operation === 'move') {
-        const dx = canvasX - dragState.startX;
-        const dy = canvasY - dragState.startY;
+        const dx =
+          (canvasX - dragState.startX) * (ctx.canvas.width / canvasRect.width);
+        const dy =
+          (canvasY - dragState.startY) *
+          (ctx.canvas.height / canvasRect.height);
         const translateX = dragState.targetInitX + dx;
         const translateY = dragState.targetInitY + dy;
         updateTransform({translateX, translateY});
@@ -302,7 +307,7 @@ export function usePointerControls({
         updateTransform({rotate});
       }
     },
-    [getCanvasToLayer, selectedLayer, updateTransform],
+    [ctx, getCanvasToLayer, selectedLayer, updateTransform],
   );
 
   useEventListener(
