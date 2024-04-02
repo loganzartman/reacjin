@@ -11,14 +11,18 @@ import {pluginByID} from '@/src/plugins/registry';
 type Operation = 'none' | 'move' | 'scale' | 'rotate';
 
 const scaleBorderSize = 16;
-const rotateBorderSize = 32;
+const rotateBorderSize = 24;
 
-const opCursors: Record<Operation, Property.Cursor> = {
-  none: 'default',
-  move: 'move',
-  scale: 'se-resize',
-  rotate: 'crosshair',
-};
+const scaleCursors: Property.Cursor[] = [
+  'e-resize',
+  'se-resize',
+  's-resize',
+  'sw-resize',
+  'w-resize',
+  'nw-resize',
+  'n-resize',
+  'ne-resize',
+];
 
 function bboxContains(
   bbox: [number, number, number, number],
@@ -209,7 +213,23 @@ export function usePointerControls({
   const updateHoveredLayer = useCallback(
     (canvasX: number, canvasY: number) => {
       const operation = getOperation(canvasX, canvasY);
-      setCursor(opCursors[operation] ?? 'default');
+
+      if (operation === 'none') setCursor('default');
+      else if (operation === 'move') setCursor('move');
+      else if (operation === 'rotate') setCursor('crosshair');
+      else if (operation === 'scale') {
+        const canvasToLayer = getCanvasToLayer(selectedLayer!);
+        const {x, y} = canvasToLayer.transformPoint({
+          x: canvasX,
+          y: canvasY,
+          w: 1,
+        });
+        const angle = Math.atan2(y, x);
+        const cursorIndex = Math.round(
+          ((angle + Math.PI) / (2 * Math.PI)) * scaleCursors.length,
+        );
+        setCursor(scaleCursors[cursorIndex % scaleCursors.length]);
+      }
 
       for (const layer of [
         ...(selectedLayer ? [selectedLayer] : []),
